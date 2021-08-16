@@ -70,7 +70,7 @@
 
 ;****************Variables Definition*********************************
     TEMP		EQU	0x22			;Reservamos 22 localidades de memoria
-    CONSTANT		MASK = b'00000011'		;Mascara que delimitara los bits mas significativos
+    CONSTANT		MASK = b'00001111'		;Mascara que delimitara los bits mas significativos
 ;****************Main code*****************************
 			ORG     0x000             	;reset vector
   			GOTO    MAIN              	;go to the main routine
