@@ -69,8 +69,10 @@
 
 
 ;****************Variables Definition*********************************
-    TEMP		EQU	0x50			;Reservamos 22 localidades de memoria
-    CONSTANT		MASK = b'11110000'		;Mascara que delimitara los bits mas significativos
+    TEMP		EQU	0x50			;Reservamos espacio para un registro temporal 
+    TEMP2		EQU	0x51			;Reservamos mas espacio para otro registro temporal
+    CONSTANT		MASKa =	0xF0			;Mascara que delimitara los bits mas significativos
+    CONSTANT		MASKb =	0x0F			;Mascara que delimitara los bits menos significativos
 ;****************Main code*****************************
 			ORG     0x000             	;reset vector
   			GOTO    MAIN              	;go to the main routine
@@ -84,16 +86,25 @@ INITIALIZE:
 MAIN:
 			CALL 	INITIALIZE
 
-BASE:
-			MOVF	PORTB, 0		;PORTB es movido a WREG
-			ANDLW	MASK			;Aplicamos mascara para los bits mas significativos
+BASE:	
+
+			MOVF	PORTB, 0		;PORTB es movido a WREG para nuestro dato 1
+			ANDLW	MASKa			;Aplicamos mascara para los bits mas significativos
 			MOVWF	TEMP			;Actualizamos el valor ya delimitado en temporal
 			RRNCF	TEMP,W	   		;Corremos un bit de dicho valor
 			MOVWF	TEMP			;Nueva actualizacion
-			RRNCF	TEMP,W	   		;Nuevo Corrimient
+			RRNCF	TEMP,W	   		;Nuevo Corrimiento
 			MOVWF	TEMP			;Nueva actualizacion
 			RRNCF	TEMP,W	   		;Ultimo corrimiento
 			MOVWF	TEMP			;Ultima actualizacion
+			MOVF	PORTB,0			;PORRTB es leido nuevamente para nuestro dato2
+			ANDLW	MASKb			;Aplicamos mascara para los bits mas significativos
+			MOVWF	TEMP2			;Actualizamos el valor del temporal 2
+			RLNCF	TEMP2,W			;Hacemos un corrimiento a la izquierda (desconozco por que esta corrido a la derecha una vez)
+			MOVWF	TEMP2			;Actualizo el dato
+			MOVF	TEMP2,W			;Muevo el temporal 2 a WREG
+			ADDWF	TEMP,0			;Sumo lo que haya en WREG con temporal 1
+			BC	CARRY_EVENT		;Si hay carry llama al evento para mostrarlo
 			CALL	DECODE			;Llamamos la función de decodificación
 			MOVWF	PORTD			;Muestra el resultado codificado
 			GOTO 	BASE			;infinite loop
@@ -116,5 +127,8 @@ DECODE:
 			RETLW	b'00111101'		;//D
 			RETLW	b'01001111'		;//E
 			RETLW	b'01000111'		;//F
-
+			
+CARRY_EVENT:
+			RETLW  b'10000000'		;
+			
 			END                       	;end of the main program
